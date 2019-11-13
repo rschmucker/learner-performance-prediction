@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.nn.utils.rnn import pad_sequence
 
-from model_dhkt import DHKT
+from model_dkt2 import DKT2
 from utils import *
 
 
@@ -16,10 +16,6 @@ def get_data(df, train_split=0.8):
 
     Arguments:
         df (pandas Dataframe): output by prepare_data.py
-        item_in (bool): if True, use items as inputs
-        skill_in (bool): if True, use skills as inputs
-        item_out (bool): if True, use items as outputs
-        skill_out (bool): if True, use skills as outputs
         train_split (float): proportion of data to use for training
     """
     item_ids = [torch.tensor(u_df["item_id"].values, dtype=torch.long)
@@ -29,9 +25,9 @@ def get_data(df, train_split=0.8):
     labels = [torch.tensor(u_df["correct"].values, dtype=torch.long)
               for _, u_df in df.groupby("user_id")]
 
-    item_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), i))[:-1] for i in item_ids]
-    skill_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), s))[:-1] for s in skill_ids]
-    label_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), l))[:-1] for l in labels]
+    item_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), i + 1))[:-1] for i in item_ids]
+    skill_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), s + 1))[:-1] for s in skill_ids]
+    label_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), l + 1))[:-1] for l in labels]
 
     data = list(zip(item_inputs, skill_inputs, label_inputs, item_ids, skill_ids, labels))
     shuffle(data)
@@ -130,8 +126,6 @@ def train(train_data, val_data, model, optimizer, logger, saver, num_epochs, bat
                 preds[:, i:i + bptt] = pred
 
             loss = compute_loss(preds, labels.cuda(), criterion)
-            hinge_loss = model.hinge_loss()
-            loss += model.hinge_loss()
             train_auc = compute_auc(torch.sigmoid(preds).detach().cpu(), labels)
 
             model.zero_grad()
@@ -139,7 +133,6 @@ def train(train_data, val_data, model, optimizer, logger, saver, num_epochs, bat
             optimizer.step()
             step += 1
             metrics.store({'loss/train': loss.item()})
-            metrics.store({'hinge_loss/train': hinge_loss.item()})
             metrics.store({'auc/train': train_auc})
 
             # Logging
@@ -174,10 +167,10 @@ def train(train_data, val_data, model, optimizer, logger, saver, num_epochs, bat
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train DHKT.')
+    parser = argparse.ArgumentParser(description='Train DKT2.')
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--logdir', type=str, default='runs/dhkt')
-    parser.add_argument('--savedir', type=str, default='save/dhkt')
+    parser.add_argument('--logdir', type=str, default='runs/dkt2')
+    parser.add_argument('--savedir', type=str, default='save/dkt2')
     parser.add_argument('--hid_size', type=int, default=200)
     parser.add_argument('--embed_size', type=int, default=200)
     parser.add_argument('--num_hid_layers', type=int, default=1)
@@ -187,20 +180,16 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=100)
     args = parser.parse_args()
 
-    df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data.csv'), sep="\t")
+    full_df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data.csv'), sep="\t")
+    train_df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data_train.csv'), sep="\t")
 
-    train_data, val_data = get_data(df)
+    train_data, val_data = get_data(train_df)
 
-    num_items = int(df["item_id"].max() + 1) + 1
-    num_skills = int(df["skill_id"].max() + 1) + 1
+    num_items = int(full_df["item_id"].max() + 1) + 1
+    num_skills = int(full_df["skill_id"].max() + 1) + 1
 
-    # Build Q-matrix for hinge loss
-    Q_mat = torch.ones((num_items, num_skills))
-    for item_id, skill_id in df[["item_id", "skill_id"]].values:
-        Q_mat[item_id, skill_id] = -1
-    Q_mat = Q_mat.cuda()
-
-    model = DHKT(Q_mat, args.hid_size, args.embed_size, args.num_hid_layers, args.drop_prob).cuda()
+    model = DKT2(num_items, num_skills, args.hid_size, args.embed_size, args.num_hid_layers,
+                 args.drop_prob).cuda()
     optimizer = Adam(model.parameters(), lr=args.lr)
 
     # Reduce batch size until it fits on GPU
@@ -216,4 +205,3 @@ if __name__ == "__main__":
             print(f'Batch does not fit on gpu, reducing size to {args.batch_size}')
 
     logger.close()
-

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class DKT(nn.Module):
+class DKT1(nn.Module):
     def __init__(self, num_items, num_skills, hid_size, num_hid_layers, drop_prob,
                  item_in, skill_in, item_out, skill_out):
         """Deep knowledge tracing (https://papers.nips.cc/paper/5654-deep-knowledge-tracing.pdf).
@@ -19,7 +19,7 @@ class DKT(nn.Module):
             item_out (bool): if True, use items as outputs
             skill_out (bool): if True, use skills as outputs
         """
-        super(DKT, self).__init__()
+        super(DKT1, self).__init__()
         self.num_items = num_items
         self.num_skills = num_skills
         self.item_in = item_in

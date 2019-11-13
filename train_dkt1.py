@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.nn.utils.rnn import pad_sequence
 
-from model_dkt import DKT
+from model_dkt1 import DKT1
 from utils import *
 
 
@@ -189,10 +189,10 @@ def train(train_data, val_data, model, optimizer, logger, saver, num_epochs, bat
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train DKT.')
+    parser = argparse.ArgumentParser(description='Train DKT1.')
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--logdir', type=str, default='runs/dkt')
-    parser.add_argument('--savedir', type=str, default='save/dkt')
+    parser.add_argument('--logdir', type=str, default='runs/dkt1')
+    parser.add_argument('--savedir', type=str, default='save/dkt1')
     parser.add_argument('--item_in', action='store_true',
                         help='If True, use items as inputs.')
     parser.add_argument('--skill_in', action='store_true',
@@ -214,16 +214,17 @@ if __name__ == "__main__":
     assert (args.item_in or args.skill_in)    # Use at least one of skills or items as input
     assert (args.item_out != args.skill_out)  # Use exactly one of skills or items as output
 
-    df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data.csv'), sep="\t")
+    full_df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data.csv'), sep="\t")
+    train_df = pd.read_csv(os.path.join('data', args.dataset, 'preprocessed_data_train.csv'), sep="\t")
 
-    train_data, val_data = get_data(df, args.item_in, args.skill_in, args.item_out,
+    train_data, val_data = get_data(train_df, args.item_in, args.skill_in, args.item_out,
                                     args.skill_out, args.skill_separate)
 
-    num_items = int(df["item_id"].max() + 1) + 1
-    num_skills = int(df["skill_id"].max() + 1) + 1
+    num_items = int(full_df["item_id"].max() + 1) + 1
+    num_skills = int(full_df["skill_id"].max() + 1) + 1
 
-    model = DKT(num_items, num_skills, args.hid_size, args.num_hid_layers, args.drop_prob,
-                args.item_in, args.skill_in, args.item_out, args.skill_out).cuda()
+    model = DKT1(num_items, num_skills, args.hid_size, args.num_hid_layers, args.drop_prob,
+                 args.item_in, args.skill_in, args.item_out, args.skill_out).cuda()
     optimizer = Adam(model.parameters(), lr=args.lr)
 
     # Reduce batch size until it fits on GPU

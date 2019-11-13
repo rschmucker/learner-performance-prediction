@@ -5,13 +5,14 @@ import argparse
 import os
 
 
-def prepare_assistments(data_name, min_interactions_per_user, remove_nan_skills):
+def prepare_assistments(data_name, min_interactions_per_user, remove_nan_skills, train_split=0.8):
     """Preprocess ASSISTments dataset.
     
     Arguments:
         data_name: "assistments09", "assistments12", "assistments15" or "assistments17"
         min_interactions_per_user (int): minimum number of interactions per student
         remove_nan_skills (bool): if True, remove interactions with no skill tag
+        train_split (float): proportion of data to use for training
 
     Outputs:
         df (pandas DataFrame): preprocessed ASSISTments dataset with user_id, item_id,
@@ -89,15 +90,23 @@ def prepare_assistments(data_name, min_interactions_per_user, remove_nan_skills)
     bkt_skills = unique_skill_ids
     bkt_split = np.random.randint(low=0, high=5, size=df["user_id"].nunique()).reshape(1, -1)
 
+    # Train-test split
+    users = df["user_id"].unique()
+    split = int(train_split * len(users))
+    train_df = df[df["user_id"].isin(users[:split])]
+    test_df = df[df["user_id"].isin(users[split:])]
+
     # Save data
     sparse.save_npz(os.path.join(data_path, "q_mat.npz"), sparse.csr_matrix(Q_mat))
+    train_df.to_csv(os.path.join(data_path, "preprocessed_data_train.csv"), sep="\t", index=False)
+    test_df.to_csv(os.path.join(data_path, "preprocessed_data_test.csv"), sep="\t", index=False)
     df.to_csv(os.path.join(data_path, "preprocessed_data.csv"), sep="\t", index=False)
     np.savetxt(os.path.join(data_path, "bkt_dataset.txt"), bkt_dataset, fmt='%i')
     np.savetxt(os.path.join(data_path, "bkt_expert_labels.txt"), bkt_skills, fmt='%i')
     np.savetxt(os.path.join(data_path, "bkt_splits.txt"), bkt_split, fmt='%i')
 
 
-def prepare_kddcup10(data_name, min_interactions_per_user, kc_col_name, remove_nan_skills):
+def prepare_kddcup10(data_name, min_interactions_per_user, kc_col_name, remove_nan_skills, train_split=0.8):
     """Preprocess KDD Cup 2010 dataset.
 
     Arguments:
@@ -105,6 +114,7 @@ def prepare_kddcup10(data_name, min_interactions_per_user, kc_col_name, remove_n
         min_interactions_per_user (int): minimum number of interactions per student
         kc_col_name (str): Skills id column
         remove_nan_skills (bool): if True, remove interactions with no skill tag
+        train_split (float): proportion of data to use for training
 
     Outputs:
         df (pandas DataFrame): preprocessed KDD Cup 2010 dataset with user_id, item_id,
@@ -170,8 +180,16 @@ def prepare_kddcup10(data_name, min_interactions_per_user, kc_col_name, remove_n
     bkt_skills = unique_skill_ids
     bkt_split = np.random.randint(low=0, high=5, size=df["user_id"].nunique()).reshape(1, -1)
 
+    # Train-test split
+    users = df["user_id"].unique()
+    split = int(train_split * len(users))
+    train_df = df[df["user_id"].isin(users[:split])]
+    test_df = df[df["user_id"].isin(users[split:])]
+
     # Save data
     sparse.save_npz(os.path.join(data_path, "q_mat.npz"), sparse.csr_matrix(Q_mat))
+    train_df.to_csv(os.path.join(data_path, "preprocessed_data_train.csv"), sep="\t", index=False)
+    test_df.to_csv(os.path.join(data_path, "preprocessed_data_test.csv"), sep="\t", index=False)
     df.to_csv(os.path.join(data_path, "preprocessed_data.csv"), sep="\t", index=False)
     np.savetxt(os.path.join(data_path, "bkt_dataset.txt"), bkt_dataset, fmt='%i')
     np.savetxt(os.path.join(data_path, "bkt_expert_labels.txt"), bkt_skills, fmt='%i')
@@ -248,8 +266,11 @@ def prepare_squirrel_ai(min_interactions_per_user):
     np.savetxt(os.path.join(data_path, "bkt_splits.txt"), bkt_split, fmt='%i')
 
 
-def prepare_spanish():
+def prepare_spanish(train_split=0.8):
     """Preprocess Spanish dataset.
+
+    Arguments:
+        train_split (float): proportion of data to use for training
 
     Outputs:
         df (pandas DataFrame): preprocessed Spanish dataset with user_id, item_id,
@@ -274,8 +295,16 @@ def prepare_spanish():
     for item_id, skill_id in df[["item_id", "skill_id"]].values:
         Q_mat[item_id, skill_id] = 1
 
+    # Train-test split
+    users = df["user_id"].unique()
+    split = int(train_split * len(users))
+    train_df = df[df["user_id"].isin(users[:split])]
+    test_df = df[df["user_id"].isin(users[split:])]
+
     # Save data
     sparse.save_npz(os.path.join(data_path, "q_mat.npz"), sparse.csr_matrix(Q_mat))
+    train_df.to_csv(os.path.join(data_path, "preprocessed_data_train.csv"), sep="\t", index=False)
+    test_df.to_csv(os.path.join(data_path, "preprocessed_data_test.csv"), sep="\t", index=False)
     df.to_csv(os.path.join(data_path, "preprocessed_data.csv"), sep="\t", index=False)
 
 

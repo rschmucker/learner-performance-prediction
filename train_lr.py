@@ -1,4 +1,4 @@
-from sklearn.metrics import roc_auc_score, accuracy_score, log_loss
+from sklearn.metrics import roc_auc_score, accuracy_score, log_loss, brier_score_loss
 from sklearn.linear_model import LogisticRegression
 from scipy.sparse import load_npz, csr_matrix
 import argparse
@@ -9,7 +9,8 @@ def compute_metrics(y_pred, y):
     acc = accuracy_score(y, np.round(y_pred))
     auc = roc_auc_score(y, y_pred)
     nll = log_loss(y, y_pred)
-    return acc, auc, nll
+    mse = brier_score_loss(y, y_pred)
+    return acc, auc, nll, mse
 
 
 if __name__ == "__main__":
@@ -43,6 +44,8 @@ if __name__ == "__main__":
     # Compute metrics
     y_pred_train = model.predict_proba(X_train)[:, 1]
     y_pred_val = model.predict_proba(X_val)[:, 1]
-    acc_train, auc_train, nll_train = compute_metrics(y_pred_train, y_train)
-    acc_val, auc_val, nll_val = compute_metrics(y_pred_val, y_val)
-    print(f"{args.dataset}, {features_suffix}, train auc = {auc_train}, val auc = {auc_val}")
+    acc_train, auc_train, nll_train, mse_train = compute_metrics(y_pred_train, y_train)
+    acc_val, auc_val, nll_val, mse_val = compute_metrics(y_pred_val, y_val)
+    print(f"{args.dataset}, {features_suffix},"
+          f"auc={auc_train}(train)/{auc_val}(val),"
+          f"mse={mse_train}(train)/{mse_val}(val)")

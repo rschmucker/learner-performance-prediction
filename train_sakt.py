@@ -27,8 +27,8 @@ def get_data(df, max_length, train_split=0.8):
     labels = [torch.tensor(u_df["correct"].values, dtype=torch.long)
               for _, u_df in df.groupby("user_id")]
 
-    item_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), i))[:-1] for i in item_ids]
-    skill_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), s))[:-1] for s in skill_ids]
+    item_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), i + 1))[:-1] for i in item_ids]
+    skill_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), s + 1))[:-1] for s in skill_ids]
     label_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), l))[:-1] for l in labels]
 
     def chunk(list):
@@ -187,8 +187,8 @@ if __name__ == "__main__":
 
     train_data, val_data = get_data(train_df, args.max_length)
 
-    num_items = int(full_df["item_id"].max() + 1) + 1
-    num_skills = int(full_df["skill_id"].max() + 1) + 1
+    num_items = int(full_df["item_id"].max() + 1)
+    num_skills = int(full_df["skill_id"].max() + 1)
 
     model = SAHKT(num_items, num_skills, args.embed_size, args.num_attn_layers, args.num_heads,
                   args.encode_pos, args.max_pos, args.drop_prob).cuda()

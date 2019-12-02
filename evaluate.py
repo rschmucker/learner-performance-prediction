@@ -11,11 +11,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Write predictions to a dataframe.')
     parser.add_argument('--X_file', type=str)
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--nn_path', type=str)
+    parser.add_argument('--dkt_path', type=str)
     parser.add_argument('--max_iter', type=int, default=1000)
     args = parser.parse_args()
 
-    nn = torch.load(args.nn_path)
+    dkt = torch.load(args.dkt_path)
 
     # Load sparse dataset for logistic regression
     X = csr_matrix(load_npz(args.X_file))
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     lr_preds = model.predict_proba(X_test[:, 5:])[:, 1]
 
     lr_data = np.concatenate((X_test[:, :5].toarray(), lr_preds.reshape(-1, 1)), axis=1)
-    lr_df = pd.DataFrame(data=lr_data, columns=["user_id", "item_id", "timestamp", "correct", "skill_id", "LR"])
+    lr_df = pd.DataFrame(data=lr_data, columns=["user_id", "item_id", "timestamp", "correct", "skill_id", "Best-LR"])
 
     full_data = None
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
         item_inputs = torch.cat((torch.zeros(1, dtype=torch.long), item_ids + 1))[:-1]
         skill_inputs = torch.cat((torch.zeros(1, dtype=torch.long), skill_ids + 1))[:-1]
-        label_inputs = torch.cat((torch.zeros(1, dtype=torch.long), labels + 1))[:-1]
+        label_inputs = torch.cat((torch.zeros(1, dtype=torch.long), labels))[:-1]
 
         item_inputs = item_inputs.unsqueeze(0).cuda()
         skill_inputs = skill_inputs.unsqueeze(0).cuda()
@@ -56,17 +56,18 @@ if __name__ == "__main__":
         skill_ids = skill_ids.unsqueeze(0).cuda()
 
         with torch.no_grad():
-            nn_preds, _ = nn(item_inputs, skill_inputs, label_inputs, item_ids, skill_ids)
-            nn_preds = torch.sigmoid(nn_preds).cpu().squeeze(0)
+            dkt_preds, _ = dkt(item_inputs, skill_inputs, label_inputs, item_ids, skill_ids)
+            dkt_preds = torch.sigmoid(dkt_preds).cpu().squeeze(0)
 
-        new_data = np.hstack((u_df.values, nn_preds.numpy().reshape(-1, 1)))
+        new_data = np.hstack((u_df.values, dkt_preds.numpy().reshape(-1, 1)))
         full_data = new_data if full_data is None else np.vstack((full_data, new_data))
 
     full_df = pd.DataFrame(data=full_data,
-                           columns=["user_id", "item_id", "timestamp", "correct", "skill_id", "LR", "NN"])
+                           columns=["user_id", "item_id", "timestamp", "correct", "skill_id", "Best-LR", "DKT"])
 
-    lr_auc = roc_auc_score(full_df["correct"], full_df["LR"])
-    nn_auc = roc_auc_score(full_df["correct"], full_df["NN"])
-    print(f"{args.dataset}: lr_auc={lr_auc}, nn_auc={nn_auc}")
+    lr_auc = roc_auc_score(full_df["correct"], full_df["Best-LR"])
+    dkt_auc = roc_auc_score(full_df["correct"], full_df["DKT"])
+    print(f"{args.dataset}: lr_auc={lr_auc}, dkt_auc={dkt_auc}")
 
-    full_df.to_csv(f'data/{args.dataset}/predictions_test.csv', sep="\t", index=False)
+    #full_df.to_csv(f'data/{args.dataset}/predictions_test.csv', sep="\t", index=False)
+    full_df.to_csv(f'data/{args.dataset}/predictions_train.csv', sep="\t", index=False)

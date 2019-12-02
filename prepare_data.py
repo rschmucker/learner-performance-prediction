@@ -92,6 +92,7 @@ def prepare_assistments(data_name, min_interactions_per_user, remove_nan_skills,
 
     # Train-test split
     users = df["user_id"].unique()
+    np.random.shuffle(users)
     split = int(train_split * len(users))
     train_df = df[df["user_id"].isin(users[:split])]
     test_df = df[df["user_id"].isin(users[split:])]
@@ -182,6 +183,7 @@ def prepare_kddcup10(data_name, min_interactions_per_user, kc_col_name, remove_n
 
     # Train-test split
     users = df["user_id"].unique()
+    np.random.shuffle(users)
     split = int(train_split * len(users))
     train_df = df[df["user_id"].isin(users[:split])]
     test_df = df[df["user_id"].isin(users[split:])]
@@ -297,6 +299,7 @@ def prepare_spanish(train_split=0.8):
 
     # Train-test split
     users = df["user_id"].unique()
+    np.random.shuffle(users)
     split = int(train_split * len(users))
     train_df = df[df["user_id"].isin(users[:split])]
     test_df = df[df["user_id"].isin(users[split:])]

@@ -27,7 +27,7 @@ def get_data(df, train_split=0.8):
 
     item_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), i + 1))[:-1] for i in item_ids]
     skill_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), s + 1))[:-1] for s in skill_ids]
-    label_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), l + 1))[:-1] for l in labels]
+    label_inputs = [torch.cat((torch.zeros(1, dtype=torch.long), l))[:-1] for l in labels]
 
     data = list(zip(item_inputs, skill_inputs, label_inputs, item_ids, skill_ids, labels))
     shuffle(data)
@@ -79,7 +79,7 @@ def compute_loss(preds, labels, criterion):
 
 
 def train(train_data, val_data, model, optimizer, logger, saver, num_epochs, batch_size, bptt=50):
-    """Train DHKT model.
+    """Train DKT model.
 
     Arguments:
         train_data (list of lists of torch Tensor)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
     train_data, val_data = get_data(train_df)
 
-    num_items = int(full_df["item_id"].max() + 1) + 1
-    num_skills = int(full_df["skill_id"].max() + 1) + 1
+    num_items = int(full_df["item_id"].max() + 1)
+    num_skills = int(full_df["skill_id"].max() + 1)
 
     model = DKT2(num_items, num_skills, args.hid_size, args.embed_size, args.num_hid_layers,
                  args.drop_prob).cuda()
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     # Reduce batch size until it fits on GPU
     while True:
         try:
-            param_str = f'{args.dataset}, batch_size={args.batch_size}'
+            param_str = f'{args.dataset},batch_size={args.batch_size}'
             logger = Logger(os.path.join(args.logdir, param_str))
             saver = Saver(args.savedir, param_str)
             train(train_data, val_data, model, optimizer, logger, saver, args.num_epochs, args.batch_size)

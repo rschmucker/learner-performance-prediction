@@ -1,5 +1,4 @@
 import argparse
-from random import shuffle
 from scipy.sparse import load_npz, csr_matrix
 from sklearn.metrics import roc_auc_score
 
@@ -37,8 +36,8 @@ def train(X_train, X_val, model, optimizer, logger, saver, num_epochs, batch_siz
     step = 0
 
     for epoch in range(num_epochs):
-        shuffle(train_idxs)
-        shuffle(val_idxs)
+        np.random.shuffle(train_idxs)
+        np.random.shuffle(val_idxs)
 
         # Training
         for k in range(0, len(train_idxs), batch_size):

@@ -81,7 +81,7 @@ To train a SAKT model:
 python train_sakt.py --dataset <dataset codename>
 ```
 
-## Results
+## Results (AUC)
 
 | Algorithm      | assist09      | assist12 | assist15      | assist17 | bridge06 | algebra05 | spanish  | statics  |
 | -------------- | ------------- | -------- | ------------- | -------- | -------- | --------- | -------- | -------- |

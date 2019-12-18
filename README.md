@@ -11,7 +11,7 @@ Simple and performant implementations of knowledge tracing algorithms:
 In a new conda environment with python 3, install [PyTorch](https://pytorch.org) and the remaining requirements:
 
 ```
-pip install -r requirements_kt.txt
+pip install -r requirements.txt
 ```
 
 The code supports the following datasets:
@@ -88,6 +88,6 @@ python train_sakt.py --dataset <dataset codename>
 | IRT            | 0.69          | 0.71     | 0.64          | 0.68     | 0.75     | 0.77      | 0.68     | 0.79     |       
 | PFA            | 0.72          | 0.68     | 0.69          | 0.62     | 0.77     | 0.76      | 0.85     | 0.69     |
 | DAS3H          | -             | 0.74     | -             | 0.69     | 0.79     | **0.83**  | -        | -        |
+| Best-LR        | **0.77**      | **0.75** | 0.70          | 0.71     | **0.80** | **0.83**  | **0.86** | 0.82     |
 | DKT            | 0.75          | **0.75** | **0.73**      | **0.77** | 0.79     | 0.82      | 0.85     | **0.83** |
 | SAKT           | 0.75          | 0.73     | **0.73**      | 0.72     | 0.78     | 0.80      | -        | 0.81     |
-| Best-LR        | **0.77**      | **0.75** | 0.70          | 0.71     | **0.80** | **0.83**  | **0.86** | 0.82     |

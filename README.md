@@ -1,6 +1,6 @@
-# kt-algos
+# learner-performance-prediction
 
-Simple and performant implementations of knowledge tracing algorithms:
+Simple and performant implementations of learner performance prediction algorithms:
 - [Performance Factors Analysis (PFA)](http://pact.cs.cmu.edu/koedinger/pubs/AIED%202009%20final%20Pavlik%20Cen%20Keodinger%20corrected.pdf)
 - [DAS3H](https://arxiv.org/pdf/1905.06873.pdf)
 - [Deep Knowledge Tracing (DKT)](https://stanford.edu/~cpiech/bio/papers/deepKnowledgeTracing.pdf)
